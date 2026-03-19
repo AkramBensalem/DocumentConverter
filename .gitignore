@@ -45,3 +45,5 @@ bin/
 ### Secrets ###
 .env
 /.intellijPlatform/
+
+.idea/
