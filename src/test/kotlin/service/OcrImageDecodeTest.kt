@@ -1,6 +1,6 @@
 package service
 
-import me.akram.bensalem.papperconverter.data.response.OcrResponse
+import me.akram.bensalem.documentconverter.data.response.OcrResponse
 import org.junit.jupiter.api.Assertions.assertDoesNotThrow
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test

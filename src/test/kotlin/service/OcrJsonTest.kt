@@ -1,7 +1,7 @@
 package service
 
 import kotlinx.serialization.json.Json
-import me.akram.bensalem.papperconverter.data.response.OcrResponse
+import me.akram.bensalem.documentconverter.data.response.OcrResponse
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 

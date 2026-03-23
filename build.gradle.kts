@@ -18,6 +18,7 @@ repositories {
 dependencies {
     intellijPlatform {
         create("IC", "2024.3.3")
+        testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.JUnit5)
     }
 
     implementation("com.squareup.okhttp3:okhttp:4.12.0") {
@@ -44,6 +45,8 @@ dependencies {
 
     testImplementation(platform("org.junit:junit-bom:5.10.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
+    testImplementation("junit:junit:4.13.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 intellijPlatform {

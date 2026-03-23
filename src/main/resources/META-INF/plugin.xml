@@ -1,13 +1,13 @@
 <idea-plugin>
-    <id>me.akram.bensalem.pdf.ocr</id>
-    <name>PDF Converter</name>
-    <vendor url="https://example.com">Akram Bensalem</vendor>
+    <id>me.akram.bensalem.document.converter</id>
+    <name>Document Converter</name>
+    <vendor url="https://github.com/AkramBensalem/DocumentConverter">Akram Bensalem</vendor>
     <description><![CDATA[
-    <img src="https://github.com/AkramBensalem/PapperConverter/blob/master/Illustrations/main.png?raw=true" alt="PDF Converter Logo" width="200"/>
+    <img src="https://github.com/AkramBensalem/DocumentConverter/blob/master/illustrations/main.png?raw=true" alt="Document Converter Logo" width="200"/>
 
-        <p>Transform your documents effortlessly with PDF Converter,
+        <p>Transform your documents effortlessly with Document Converter,
         <br/>a pioneering open-source plugin that bridges the gap between various document formats. <br/>
-        Whether you need to convert PDFs to Markdown, JSON, or other formats,
+        Whether you need to convert documents (PDF, etc.) to Markdown, JSON, or other formats,
         <br/>this tool has you covered.</p>
 
         <p>🔍 <strong>Key Features:</strong></p>
@@ -45,11 +45,11 @@
     ]]></description>
     <depends>com.intellij.modules.platform</depends>
     <extensions defaultExtensionNs="com.intellij">
-        <applicationConfigurable instance="me.akram.bensalem.papperconverter.settings.PdfOcrConfigurable" id="pdf.ocr.settings" displayName="PDF Converter" parentId="tools"/>
-        <notificationGroup id="PdfOcr" displayType="BALLOON" isLogByDefault="true"/>
+        <applicationConfigurable instance="me.akram.bensalem.documentconverter.settings.DocumentConverterConfigurable" id="document.converter.settings" displayName="Document Converter" parentId="tools"/>
+        <notificationGroup id="DocumentConverter" displayType="BALLOON" isLogByDefault="true"/>
     </extensions>
     <actions>
-        <action id="pdf.ocr.ConvertPdfAction" class="me.akram.bensalem.papperconverter.actions.ConvertPdfAction" text="Convert PDF" description="Convert selected PDF(s)">
+        <action id="document.converter.ConvertAction" class="me.akram.bensalem.documentconverter.actions.ConvertDocumentAction" text="Convert Document" description="Convert selected document(s)">
             <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
             <keyboard-shortcut keymap="$default" first-keystroke="ctrl alt M"/>

@@ -1,1 +1,1 @@
-rootProject.name = "PapperConverter"
+rootProject.name = "DocumentConverter"

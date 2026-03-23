@@ -1,75 +1,83 @@
-# Document Converter Plugin for IntelliJ IDEA (exemple: PDF to Markdown)
+# Document Converter Plugin for IntelliJ IDEA
 
-An IntelliJ IDEA plugin that converts selected documents as PDF files into Markdown (with images) using an OCR API.
+Document Converter is an IntelliJ IDEA plugin that allows you to transform your documents (such as PDF files) into Markdown or JSON formats effortlessly. It supports both cloud-based OCR via Mistral AI and offline conversion using MarkItDown.
 
-Features
+## Features
 
-- Project View context action: right-click PDF(s) or folder → "Convert PDF"
-- Settings page under Tools → "Document converter" to configure options and API key
-- Progress indicator, notifications, and auto-opening the generated Markdown
-- Output layout per PDF in its own folder
+- **Multi-format Support**: Convert PDF files and folders recursively.
+- **OCR Integration**: High-quality content extraction using Mistral AI OCR.
+- **Offline Mode**: Convert documents locally using MarkItDown (no API key required).
+- **Flexible Output**: Choose between Markdown (with images) and JSON formats.
+- **Smart Overwrite Policies**: Skip existing files, overwrite, or add numeric suffixes.
+- **IDE Integration**: Project View context actions, keyboard shortcuts (Ctrl+Alt+M), and a dedicated settings page.
 
-Requirements
+## Requirements
 
-- IntelliJ IDEA 2023.3+
-- JBR/Java 17 runtime
+- **IntelliJ IDEA**: 2024.3+ (Build 243+)
+- **Runtime**: JBR/Java 17+
+- **Offline Mode**: [MarkItDown](https://github.com/microsoft/markitdown) CLI must be installed and available on your PATH.
 
-Build & Run
+## Installation
 
-- Run the IDE with the plugin: `./gradlew runIde`
-- Build the plugin distribution: `./gradlew buildPlugin`
-- Run unit tests: `./gradlew test`
+1. Open IntelliJ IDEA.
+2. Go to `Settings/Preferences` → `Plugins`.
+3. Search for **Document Converter** in the Marketplace (once published).
+4. Click **Install**.
 
-Configuration
+## Configuration
 
-- Open Settings/Preferences → Tools → "Document Converter"
-- Set your OCR API key (stored securely via PasswordSafe). The settings also include:
-  - Include images, Combine pages, Open after convert
-  - Overwrite policy: Skip Existing, Overwrite, With Suffix
+1. Open `Settings/Preferences` → `Tools` → **Document Converter**.
+2. **Mistral AI Mode**:
+   - Provide your Mistral AI API key (stored securely via PasswordSafe).
+   - Use the **Test Connection** button to verify.
+3. **Offline Mode**:
+   - Ensure `markitdown` is installed.
+   - You can specify the full path to the `markitdown` executable if it's not on your PATH.
+   - Use **Check MarkItDown** to verify.
 
-OCR API
+## Usage
 
-- This plugin uses HTTP calls to upload and process PDFs.
-- JSON response format expected from OCR API:
-  ```json
-  {
-    "pages": [
-      {
-        "markdown": "...",
-        "images": [ { "id": "image-name.png", "image_base64": "..." } ]
-      }
-    ]
-  }
-  ```
-  
-Usage
+1. In the **Project** tool window, right-click one or more PDF files or a directory.
+2. Select **Convert Document**.
+3. Configure output options in the dialog.
+4. Monitor progress in the background.
+5. Upon completion, the generated files will be placed in a subfolder named after the original document.
 
-1) In the Project tool window, select one or more PDFs or a directory.
-2) Right-click → "Convert PDF to Markdown".
-3) Confirm the dialog (shows count, output mode, overwrite policy).
-4) Watch progress; on completion, a summary notification appears. If only one file was converted and the setting is enabled, the Markdown opens automatically.
+## How to Publish to JetBrains Marketplace
 
-Overwrite Policy Details
+To publish your plugin to the official JetBrains Marketplace, follow these steps:
 
-- Skip Existing: existing files are left untouched
-- Overwrite: existing files are replaced
-- With Suffix: target files get a numeric suffix like `name (1).md`
+1.  **Build the Distribution**:
+    - Run the following command in the project root:
+      ```bash
+      ./gradlew buildPlugin
+      ```
+    - The generated plugin ZIP file will be located at `build/distributions/DocumentConverter-0.0.1.zip`.
 
-Troubleshooting
+2.  **Prepare for Marketplace**:
+    - Ensure your `plugin.xml` has a unique `<id>`, `<name>`, and a detailed `<description>`.
+    - Provide a high-quality icon (`src/main/resources/META-INF/pluginIcon.svg`).
 
-- Authentication errors or rate limits: check your API key in Settings.
-- Proxy environments: ensure IDE proxy settings are configured; the plugin attempts to use them.
+3.  **Upload to Marketplace**:
+    - Sign in to [JetBrains Marketplace](https://plugins.jetbrains.com/) with your JetBrains Account.
+    - Click on your profile and select **Upload plugin**.
+    - Drag and drop the ZIP file generated in step 1.
+    - Fill in the required metadata (category, tags, etc.) and submit for review.
 
-Manual Test Checklist
+4.  **Automated Publishing (Recommended)**:
+    - Generate a **Permanent Token** in your Marketplace profile.
+    - Set the `ORG_GRADLE_PROJECT_intellijPublishToken` environment variable or add it to `gradle.properties`.
+    - Run:
+      ```bash
+      ./gradlew publishPlugin
+      ```
 
-- Single PDF → generates folder with .md and images, opens markdown
-- Multiple PDFs → progress increments; summary notification
-- Folder selection → recursive discovery
-- Overwrite policy behaviors verified
-- Settings persist across IDE restarts; Test connection indicates basic validation
-- You can bind a keyboard shortcut to the action (default example: Ctrl+Alt+M)
+## Build & Run (Development)
 
-Notes
+- **Run IDE with Plugin**: `./gradlew runIde`
+- **Run Tests**: `./gradlew test`
+- **Verify Plugin**: `./gradlew verifyPlugin`
 
-- No Python dependency. Any existing scripts in repo are not used by the plugin.
-- API key is stored securely with PasswordSafe (shadow boolean stored in settings state).
+## License
+
+This project is licensed under the MIT License.

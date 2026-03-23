@@ -1,6 +1,6 @@
 package util
 
-import me.akram.bensalem.papperconverter.util.IoUtil
+import me.akram.bensalem.documentconverter.util.IoUtil
 import org.junit.jupiter.api.Assertions.assertArrayEquals
 import org.junit.jupiter.api.Test
 

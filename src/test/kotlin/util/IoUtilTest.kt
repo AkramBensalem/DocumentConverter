@@ -1,7 +1,7 @@
 package util
 
-import me.akram.bensalem.papperconverter.settings.PdfOcrSettingsState
-import me.akram.bensalem.papperconverter.util.IoUtil
+import me.akram.bensalem.documentconverter.settings.DocumentConverterSettingsState
+import me.akram.bensalem.documentconverter.util.IoUtil
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -24,7 +24,7 @@ class IoUtilTest {
         val dir = Files.createTempDirectory("iou")
         val base = dir.resolve("f.md")
         Files.writeString(base, "a")
-        val res = IoUtil.writeText(base, "b", PdfOcrSettingsState.OverwritePolicy.SkipExisting)
+        val res = IoUtil.writeText(base, "b", DocumentConverterSettingsState.OverwritePolicy.SkipExisting)
         assertEquals(null, res)
         assertEquals("a", Files.readString(base))
     }
