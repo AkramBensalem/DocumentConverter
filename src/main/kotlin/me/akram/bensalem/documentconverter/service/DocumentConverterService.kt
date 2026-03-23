@@ -160,13 +160,25 @@ class DocumentConverterService {
             }
 
             val ocrResponse: OcrResponse = runMistralOCR(document, options)
-            val pageMarkdowns = ocrResponse.pages.map { it.markdown }
 
             val imagesToWrite: List<Pair<String, ByteArray>> =
                 ocrResponse.pages
                     .flatMap { page -> page.images }
                     .mapNotNull { img -> img.toByteArray()?.let { img.id to it } }
 
+            val imageIds = imagesToWrite.map { it.first }
+
+            // Update markdown to point to figures subdirectory
+            val finalResponse = if (options.includeImages && imageIds.isNotEmpty()) {
+                val updatedPages = ocrResponse.pages.map { page ->
+                    page.copy(markdown = IoUtil.updateImagePaths(page.markdown, imageIds, "figures"))
+                }
+                ocrResponse.copy(pages = updatedPages)
+            } else {
+                ocrResponse
+            }
+
+            val pageMarkdowns = finalResponse.pages.map { it.markdown }
             val stem = document.fileName.toString().substringBeforeLast('.')
 
             val created = mutableListOf<Path>()
@@ -187,15 +199,16 @@ class DocumentConverterService {
             var jsonFile: Path? = null
             if (options.outputJson) {
                 val jsonTarget = targetDir.resolve("$stem.json")
-                val jsonContent = json.encodeToString(OcrResponse.serializer(), ocrResponse)
+                val jsonContent = json.encodeToString(OcrResponse.serializer(), finalResponse)
                 jsonFile = IoUtil.writeText(jsonTarget, jsonContent, options.overwritePolicy)
                 if (jsonFile != null) created.add(jsonFile)
             }
 
             val imageFiles = mutableListOf<Path>()
             if (options.includeImages && imagesToWrite.isNotEmpty()) {
+                val figuresDir = targetDir.resolve("figures")
                 for ((id, bytes) in imagesToWrite) {
-                    val imgTarget = targetDir.resolve(id)
+                    val imgTarget = figuresDir.resolve(id)
                     IoUtil.writeBytes(imgTarget, bytes, options.overwritePolicy)?.let {
                         imageFiles.add(it)
                         created.add(it)

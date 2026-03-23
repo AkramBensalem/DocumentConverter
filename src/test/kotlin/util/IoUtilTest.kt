@@ -28,4 +28,11 @@ class IoUtilTest {
         assertEquals(null, res)
         assertEquals("a", Files.readString(base))
     }
+
+    @Test
+    fun `updateImagePaths updates links`() {
+        val md = "This is an image ![img1.png](img1.png) and another one ![alt text](img2.jpg)."
+        val updated = IoUtil.updateImagePaths(md, listOf("img1.png", "img2.jpg"), "figures")
+        assertEquals("This is an image ![img1.png](figures/img1.png) and another one ![alt text](figures/img2.jpg).", updated)
+    }
 }

@@ -66,4 +66,17 @@ object IoUtil {
             i++
         }
     }
+
+    /**
+     * Updates markdown content to point to images in a subdirectory.
+     */
+    fun updateImagePaths(markdown: String, imageIds: List<String>, subDir: String): String {
+        var result = markdown
+        for (id in imageIds) {
+            // Mistral OCR references images using ![id](id) or ![some text](id)
+            // Replace ](id) with ](subDir/id)
+            result = result.replace("]($id)", "]($subDir/$id)")
+        }
+        return result
+    }
 }

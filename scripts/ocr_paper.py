@@ -40,13 +40,17 @@ for pdf_file in input_folder.glob("*.pdf"):
         json.dump(resp.model_dump(), f, ensure_ascii=False, indent=2)
 
     # Sauvegarde Markdown et images
+    figures_dir = pdf_output / "figures"
+    figures_dir.mkdir(exist_ok=True)
     combined_md = []
     for i, page in enumerate(resp.pages, start=1):
-        combined_md.append(f"{page.markdown}\n")
+        page_md = page.markdown
         for img in page.images:
+            page_md = page_md.replace(f"]({img.id})", f"](figures/{img.id})")
             data = datauri.parse(img.image_base64).data
-            with open(pdf_output / f"{img.id}", "wb") as imgf:
+            with open(figures_dir / f"{img.id}", "wb") as imgf:
                 imgf.write(data)
+        combined_md.append(f"{page_md}\n")
     (pdf_output / f"{pdf_file.stem}.md").write_text("".join(combined_md), encoding="utf-8")
 
     print(f"✅ {pdf_file.name} traité -> {pdf_output}")
