@@ -4,23 +4,25 @@ import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.Messages
+import com.intellij.ui.components.JBCheckBox
 import com.intellij.ui.components.JBLabel
-import com.intellij.util.ui.FormBuilder
-import com.intellij.util.ui.JBUI
+import com.intellij.ui.components.JBTextField
+import com.intellij.ui.dsl.builder.AlignX
+import com.intellij.ui.dsl.builder.Cell
+import com.intellij.ui.dsl.builder.panel
+import com.intellij.ui.dsl.builder.selected
 import kotlinx.coroutines.runBlocking
 import me.akram.bensalem.documentconverter.service.DocumentConverterService
-import java.awt.GridBagConstraints
-import java.awt.GridBagLayout
 import javax.swing.*
 
 class DocumentConverterConfigurable : Configurable {
     private var panel: JPanel? = null
     private lateinit var apiKeyField: JPasswordField
-    private lateinit var includeImages: JCheckBox
-    private lateinit var combinePages: JCheckBox
-    private lateinit var openAfter: JCheckBox
-    private lateinit var outputMarkdown: JCheckBox
-    private lateinit var outputJson: JCheckBox
+    private lateinit var includeImages: JBCheckBox
+    private lateinit var combinePages: JBCheckBox
+    private lateinit var openAfter: JBCheckBox
+    private lateinit var outputMarkdown: JBCheckBox
+    private lateinit var outputJson: JBCheckBox
     private lateinit var overwritePolicyCombo: JComboBox<String>
     private lateinit var testButton: JButton
     private lateinit var offlineRadio: JRadioButton
@@ -34,115 +36,24 @@ class DocumentConverterConfigurable : Configurable {
         if (panel == null) {
             apiKeyField = JPasswordField(30)
             testButton = JButton("Test Connection")
-            includeImages = JCheckBox("Include images")
-            combinePages = JCheckBox("Combine pages into one file")
-            openAfter = JCheckBox("Open generated files")
-            outputMarkdown = JCheckBox("Output Markdown")
-            outputJson = JCheckBox("Output JSON")
+            includeImages = JBCheckBox("Include images")
+            combinePages = JBCheckBox("Combine pages into one file")
+            openAfter = JBCheckBox("Open generated files")
+            outputMarkdown = JBCheckBox("Output Markdown")
+            outputJson = JBCheckBox("Output JSON")
             overwritePolicyCombo = ComboBox(DocumentConverterSettingsState.OverwritePolicy.options)
             offlineRadio = JRadioButton("Offline")
-            mistralRadio = JRadioButton("Mistral AI")
-            val group = ButtonGroup().apply {
+            mistralRadio = JRadioButton("Online")
+            ButtonGroup().apply {
                 add(offlineRadio)
                 add(mistralRadio)
             }
 
-            markitdownCmdField = JTextField(30)
+            markitdownCmdField = JBTextField(30)
             checkMarkitdownButton = JButton("Check MarkItDown")
 
-            val modeInfo = JBLabel("<html>Offline mode uses the MarkItDown CLI to extract content locally.<br/>Provide the command path below or ensure it is on PATH. You can verify using the Check button. Example install: <code>pip install markitdown[all]</code>.</html>")
-
-            val leftColumn = JPanel(GridBagLayout()).apply {
-                val gbc = GridBagConstraints()
-
-                // Mode label
-                gbc.gridx = 0
-                gbc.gridy = 0
-                gbc.anchor = GridBagConstraints.WEST
-                gbc.insets = JBUI.insetsRight(10)
-                add(JBLabel("Mode:"), gbc)
-
-                // Mode radios panel
-                val modePanel = JPanel().apply {
-                    layout = BoxLayout(this, BoxLayout.Y_AXIS)
-                    add(offlineRadio)
-                    add(mistralRadio)
-                    add(Box.createVerticalStrut(4))
-                    add(modeInfo)
-                }
-                gbc.gridx = 1
-                gbc.gridy = 0
-                gbc.weightx = 1.0
-                gbc.fill = GridBagConstraints.HORIZONTAL
-                gbc.insets = JBUI.insetsBottom(8)
-                add(modePanel, gbc)
-
-                // API Key label
-                gbc.gridx = 0
-                gbc.gridy = 1
-                gbc.weightx = 0.0
-                gbc.fill = GridBagConstraints.NONE
-                gbc.anchor = GridBagConstraints.WEST
-                gbc.insets = JBUI.insetsRight(10)
-                add(JBLabel("API Key:"), gbc)
-
-                // API Key field
-                gbc.gridx = 1
-                gbc.gridy = 1
-                gbc.weightx = 1.0
-                gbc.fill = GridBagConstraints.HORIZONTAL
-                gbc.insets = JBUI.insetsBottom(8)
-                add(apiKeyField, gbc)
-
-                // Test button
-                gbc.gridx = 1
-                gbc.gridy = 2
-                gbc.weightx = 0.0
-                gbc.fill = GridBagConstraints.NONE
-                gbc.anchor = GridBagConstraints.WEST
-                gbc.insets = JBUI.emptyInsets()
-                add(testButton, gbc)
-            }
-
-            val rightColumn = JPanel().apply {
-                layout = BoxLayout(this, BoxLayout.Y_AXIS)
-                add(includeImages)
-                add(Box.createVerticalStrut(8))
-                add(combinePages)
-                add(Box.createVerticalStrut(8))
-                add(openAfter)
-            }
-
-            val topRow = JPanel(GridBagLayout()).apply {
-                val gbc = GridBagConstraints()
-
-                gbc.gridx = 0
-                gbc.gridy = 0
-                gbc.weightx = 1.0
-                gbc.fill = GridBagConstraints.HORIZONTAL
-                gbc.anchor = GridBagConstraints.NORTHWEST
-                gbc.insets = JBUI.insetsRight(30)
-                add(leftColumn, gbc)
-
-                gbc.gridx = 1
-                gbc.weightx = 0.0
-                gbc.fill = GridBagConstraints.NONE
-                gbc.insets = JBUI.emptyInsets()
-                add(rightColumn, gbc)
-            }
-
-            fun updateApiKeyControlsEnabled() {
-                val mistral = mistralRadio.isSelected
-                apiKeyField.isEnabled = mistral
-                testButton.isEnabled = mistral
-
-                val offline = offlineRadio.isSelected
-                markitdownCmdField.isEnabled = offline
-                checkMarkitdownButton.isEnabled = offline
-            }
-
-            offlineRadio.addActionListener { updateApiKeyControlsEnabled() }
-            mistralRadio.addActionListener { updateApiKeyControlsEnabled() }
+            lateinit var offlineCell: Cell<JRadioButton>
+            lateinit var mistralCell: Cell<JRadioButton>
 
             testButton.addActionListener {
                 val s = DocumentConverterSettingsState.getInstance()
@@ -195,32 +106,54 @@ class DocumentConverterConfigurable : Configurable {
                 }
             }
 
-            val outputFormatPanel = JPanel().apply {
-                layout = BoxLayout(this, BoxLayout.Y_AXIS)
-                add(outputMarkdown)
-                add(Box.createVerticalStrut(4))
-                add(outputJson)
-            }
-
-            val markitdownPanel = JPanel().apply {
-                layout = BoxLayout(this, BoxLayout.X_AXIS)
-                add(markitdownCmdField)
-                add(Box.createHorizontalStrut(8))
-                add(checkMarkitdownButton)
-            }
-
-            panel = FormBuilder.createFormBuilder()
-                .addComponent(topRow)
-                .addVerticalGap(10)
-                .addLabeledComponent(JBLabel("MarkItDown command:"), markitdownPanel)
-                .addVerticalGap(15)
-                .addLabeledComponent(JBLabel("Overwrite Policy:"), overwritePolicyCombo)
-                .addVerticalGap(10)
-                .addLabeledComponent(JBLabel("Output Format:"), outputFormatPanel)
-                .addComponentFillVertically(JPanel(), 0)
-                .panel.apply {
-                    border = JBUI.Borders.empty(10)
+            panel = panel {
+                group("General Settings") {
+                    row {
+                        cell(includeImages)
+                    }
+                    row {
+                        cell(combinePages)
+                    }
+                    row {
+                        cell(openAfter)
+                    }
                 }
+
+                group("OCR Mode") {
+                    buttonsGroup {
+                        row {
+                            offlineCell = cell(offlineRadio)
+                                .comment("Uses the <b><a href=\"https://github.com/microsoft/markitdown\">MarkItDown</a></b> CLI locally. No internet required.")
+                        }
+                        row {
+                            mistralCell = cell(mistralRadio)
+                                .comment("Uses <b><a href=\"https://mistral.ai/\">Mistral AI</a></b> cloud services. Requires an <a href=\"https://console.mistral.ai/api-keys/\">API key</a>.")
+                        }
+                    }
+
+                    indent {
+                        row("MarkItDown command:") {
+                            cell(markitdownCmdField).align(AlignX.FILL)
+                            cell(checkMarkitdownButton)
+                        }.enabledIf(offlineCell.selected)
+
+                        row("API Key:") {
+                            cell(apiKeyField).align(AlignX.FILL)
+                            cell(testButton)
+                        }.enabledIf(mistralCell.selected)
+                    }
+                }
+
+                group("Output Settings") {
+                    row("Overwrite policy:") {
+                        cell(overwritePolicyCombo)
+                    }
+                    row("Output formats:") {
+                        cell(outputMarkdown)
+                        cell(outputJson)
+                    }
+                }
+            }
         }
         reset()
         return panel as JPanel
@@ -295,15 +228,9 @@ class DocumentConverterConfigurable : Configurable {
             DocumentConverterSettingsState.OcrMode.Offline -> offlineRadio.isSelected = true
             DocumentConverterSettingsState.OcrMode.Mistral -> mistralRadio.isSelected = true
         }
-        // Enable/disable API key controls accordingly
-        apiKeyField.isEnabled = s.state.mode == DocumentConverterSettingsState.OcrMode.Mistral
-        testButton.isEnabled = s.state.mode == DocumentConverterSettingsState.OcrMode.Mistral
 
         // MarkItDown command
         markitdownCmdField.text = s.state.markitdownCmd
-        val offline = s.state.mode == DocumentConverterSettingsState.OcrMode.Offline
-        markitdownCmdField.isEnabled = offline
-        checkMarkitdownButton.isEnabled = offline
     }
 
     override fun disposeUIResources() {

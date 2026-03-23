@@ -3,45 +3,31 @@
     <name>Document Converter</name>
     <vendor url="https://github.com/AkramBensalem/DocumentConverter">Akram Bensalem</vendor>
     <description><![CDATA[
-    <img src="https://github.com/AkramBensalem/DocumentConverter/blob/master/illustrations/main.png?raw=true" alt="Document Converter Logo" width="200"/>
+    <p align="center">
+      <img src="https://raw.githubusercontent.com/AkramBensalem/DocumentConverter/master/illustrations/logo.png" alt="Logo" width="128">
+    </p>
 
-        <p>Transform your documents effortlessly with Document Converter,
-        <br/>a pioneering open-source plugin that bridges the gap between various document formats. <br/>
-        Whether you need to convert documents (PDF, etc.) to Markdown, JSON, or other formats,
-        <br/>this tool has you covered.</p>
+    <p>A simple IntelliJ IDEA plugin for converting files into formats like Markdown and JSON.</p>
 
-        <p>🔍 <strong>Key Features:</strong></p>
-        <ul>
-          <li>Advanced OCR technology for precise content extraction</li>
-          <li>Support for scanned documents and image-based PDFs</li>
-          <li>Seamless integration with AI applications</li>
-          <li>User-friendly interface for efficient document processing</li>
-        </ul>
+    <p align="center">
+      <img src="https://raw.githubusercontent.com/AkramBensalem/DocumentConverter/master/illustrations/main.png" alt="Main Screenshot" width="480">
+    </p>
 
-        <p>🎯 <strong>Perfect For:</strong></p>
-        <ul>
-          <li>Researchers and Academics</li>
-          <li>Software Developers</li>
-          <li>Educators and Students</li>
-          <li>PhD Candidates</li>
-        </ul>
+    <p>You can use it to convert supported files and folders from the Project view or editor.</p>
 
-        <p>💡 <strong>Accessibility First:</strong><br/>
-        We believe in making document conversion accessible to everyone.<br/>
-         Our tool offers a cost-effective alternative to expensive AI subscriptions,
-         <br/>particularly beneficial for users in regions with limited payment options or budget constraints.
-         </p>
+    <p><strong>Features:</strong></p>
+    <ul>
+      <li>Convert files and folders</li>
+      <li>Export to Markdown, JSON, and other output formats</li>
+      <li>Support for OCR when needed</li>
+      <li>Offline conversion support</li>
+    </ul>
 
-        <p>🔑 <strong>Current Requirements:</strong></p>
-        <ul>
-          <li>Mistral AI API key required</li>
-        </ul>
-
-        <p>🚀 <strong>Coming Soon:</strong></p>
-        <ul>
-          <li>Offline mode (100% free, no AI needed)</li>
-          <li>Akram platform integration for credential-free access</li>
-        </ul>
+    <p><strong>Requirements:</strong></p>
+    <ul>
+      <li>Online mode requires a configured <a href="https://mistral.ai/news/mistral-ocr">Mistral AI OCR</a> <a href="https://console.mistral.ai/api-keys">API key</a></li>
+      <li>Offline mode requires <a href="https://github.com/microsoft/markitdown">MarkItDown</a> CLI to be installed</li>
+    </ul>
     ]]></description>
     <depends>com.intellij.modules.platform</depends>
     <extensions defaultExtensionNs="com.intellij">
