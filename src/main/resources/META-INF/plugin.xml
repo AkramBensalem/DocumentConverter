@@ -10,10 +10,10 @@
     <p>A simple IntelliJ IDEA plugin for converting files into formats like Markdown and JSON.</p>
 
     <p align="center">
-      <img src="https://raw.githubusercontent.com/AkramBensalem/DocumentConverter/master/illustrations/main.png" alt="Main Screenshot" width="480">
+      <img src="https://raw.githubusercontent.com/AkramBensalem/DocumentConverter/master/illustrations/main.png" alt="Main Screenshot" width="420">
     </p>
 
-    <p>You can use it to convert supported files and folders from the Project view or editor.</p>
+    <p>You can use it to convert supported files and folders<br>from the Project view or editor.</p>
 
     <p><strong>Features:</strong></p>
     <ul>
