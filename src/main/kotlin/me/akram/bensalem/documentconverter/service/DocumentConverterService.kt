@@ -38,9 +38,9 @@ class DocumentConverterService {
             install(ContentNegotiation) { json(json) }
             engine {
                 config {
-                    connectTimeout(15, TimeUnit.SECONDS)
-                    readTimeout(60, TimeUnit.SECONDS)
-                    writeTimeout(60, TimeUnit.SECONDS)
+                    connectTimeout(30, TimeUnit.SECONDS)
+                    readTimeout(0, TimeUnit.SECONDS)  // no timeout — large documents can take minutes
+                    writeTimeout(0, TimeUnit.SECONDS) // no timeout — large uploads can take minutes
                 }
             }
         }
