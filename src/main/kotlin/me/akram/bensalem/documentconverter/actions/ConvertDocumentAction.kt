@@ -13,7 +13,9 @@ import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VfsUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.application.ApplicationManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import me.akram.bensalem.documentconverter.data.Options
 import me.akram.bensalem.documentconverter.service.DocumentConverterService
 import me.akram.bensalem.documentconverter.settings.DocumentConverterSettingsState
@@ -78,8 +80,9 @@ class ConvertDocumentAction : AnAction() {
                 var firstError: String? = null
                 documents.forEachIndexed { idx, document ->
                     indicator.checkCanceled()
-                    indicator.text = "Converting ${document.fileName}"
-                    indicator.fraction = (idx.toDouble() / documents.size)
+                    indicator.text = "Converting ${document.fileName} (${idx + 1}/${documents.size})"
+                    indicator.text2 = "Uploading and processing — this may take a while for large documents…"
+                    indicator.isIndeterminate = true
                     try {
                         val outDir = IoUtil.computeOutputDir(document)
                         val options = Options(
@@ -91,52 +94,56 @@ class ConvertDocumentAction : AnAction() {
                             outputMarkdown = outputMarkdown,
                             outputJson = outputJson
                         )
-                        runBlocking {
-                            val result = service.convertDocument(document, outDir, options)
-                            if (result.error == null && result.createdFiles.isNotEmpty()) {
-                                successCount++
-                                if (firstMd == null) firstMd = result.markdownFile ?: result.jsonFile
-                                result.createdFiles.forEach { toRefresh.add(it.toFile()) }
+                        val result = runBlocking {
+                            withContext(Dispatchers.IO) {
+                                service.convertDocument(document, outDir, options)
+                            }
+                        }
+                        if (result.error == null && result.createdFiles.isNotEmpty()) {
+                            successCount++
+                            if (firstMd == null) firstMd = result.markdownFile ?: result.jsonFile
+                            result.createdFiles.forEach { toRefresh.add(it.toFile()) }
 
-                                // Move the original file into the output directory
+                            // Move the original file into the output directory
+                            try {
+                                val targetPdf = outDir.resolve(document.fileName)
+                                java.nio.file.Files.move(document, targetPdf, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                                toRefresh.add(targetPdf.toFile())
+                                toRefresh.add(document.parent.toFile()) // Refresh source directory
+                            } catch (ex: Exception) {
+                                log.warn("Failed to move $document to $outDir", ex)
+                            }
+                        } else if (result.error == null) {
+                            skippedCount++
+
+                            if (!document.parent.equals(outDir)) {
                                 try {
                                     val targetPdf = outDir.resolve(document.fileName)
-                                    java.nio.file.Files.move(document, targetPdf, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+                                    java.nio.file.Files.move(
+                                        document,
+                                        targetPdf,
+                                        java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                                    )
                                     toRefresh.add(targetPdf.toFile())
                                     toRefresh.add(document.parent.toFile()) // Refresh source directory
                                 } catch (ex: Exception) {
-                                    log.warn("Failed to move $document to $outDir", ex)
+                                    log.warn("Failed to move skipped document $document to $outDir", ex)
                                 }
-                            } else if (result.error == null) {
-                                skippedCount++
-
-                                if (!document.parent.equals(outDir)) {
-                                    try {
-                                        val targetPdf = outDir.resolve(document.fileName)
-                                        java.nio.file.Files.move(
-                                            document,
-                                            targetPdf,
-                                            java.nio.file.StandardCopyOption.REPLACE_EXISTING
-                                        )
-                                        toRefresh.add(targetPdf.toFile())
-                                        toRefresh.add(document.parent.toFile()) // Refresh source directory
-                                    } catch (ex: Exception) {
-                                        log.warn("Failed to move skipped document $document to $outDir", ex)
-                                    }
-                                }
-                                
-                                
-                                
-                            } else {
-                                failCount++
-                                if (firstError == null) firstError = result.error
                             }
+                        } else {
+                            failCount++
+                            if (firstError == null) firstError = result.error
                         }
+                        // Switch back to determinate progress between files
+                        indicator.isIndeterminate = false
+                        indicator.fraction = ((idx + 1).toDouble() / documents.size)
 
                     } catch (ex: Exception) {
                         log.warn("Failed to convert $document", ex)
                         failCount++
                         if (firstError == null) firstError = ex.message
+                        indicator.isIndeterminate = false
+                        indicator.fraction = ((idx + 1).toDouble() / documents.size)
                     }
                 }
 
