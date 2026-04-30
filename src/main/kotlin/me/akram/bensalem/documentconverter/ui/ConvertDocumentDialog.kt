@@ -5,7 +5,9 @@ import com.intellij.openapi.ui.ComboBox
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.ValidationInfo
 import com.intellij.ui.components.JBCheckBox
+import com.intellij.ui.components.JBTextField
 import com.intellij.ui.dsl.builder.panel
+import me.akram.bensalem.documentconverter.util.IoUtil
 import me.akram.bensalem.documentconverter.settings.DocumentConverterSettingsState
 import javax.swing.Action
 import javax.swing.JComponent
@@ -19,6 +21,7 @@ class ConvertDocumentDialog(
     private val overwritePolicyCombo = ComboBox(DocumentConverterSettingsState.OverwritePolicy.options)
     private val outputMarkdownCheckbox = JBCheckBox("Output Markdown", settings.state.outputMarkdown)
     private val outputJsonCheckbox = JBCheckBox("Output JSON", settings.state.outputJson)
+    private val pageRangesField = JBTextField(20)
 
     var selectedOverwritePolicy: DocumentConverterSettingsState.OverwritePolicy
         get() = DocumentConverterSettingsState.OverwritePolicy.entries[overwritePolicyCombo.selectedIndex]
@@ -31,6 +34,9 @@ class ConvertDocumentDialog(
 
     val outputJson: Boolean
         get() = outputJsonCheckbox.isSelected
+
+    val pageRanges: String
+        get() = pageRangesField.text.trim()
 
     init {
         title = "Convert Document"
@@ -53,12 +59,25 @@ class ConvertDocumentDialog(
             row {
                 cell(outputJsonCheckbox)
             }
+            row {
+                label("Pages:")
+                cell(pageRangesField)
+                    .comment("e.g. 1-3, 5, 7-9 (leave blank for all pages)")
+            }
         }
     }
 
     override fun doValidate(): ValidationInfo? {
         if (!outputMarkdownCheckbox.isSelected && !outputJsonCheckbox.isSelected) {
             return ValidationInfo("At least one output format must be selected")
+        }
+        val ranges = pageRangesField.text.trim()
+        if (ranges.isNotBlank()) {
+            try {
+                IoUtil.parsePageRanges(ranges)
+            } catch (e: IllegalArgumentException) {
+                return ValidationInfo(e.message ?: "Invalid page ranges", pageRangesField)
+            }
         }
         return null
     }

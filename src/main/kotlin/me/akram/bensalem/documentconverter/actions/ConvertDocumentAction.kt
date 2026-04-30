@@ -92,7 +92,8 @@ class ConvertDocumentAction : AnAction() {
                             mode = settings.state.mode,
                             apiKey = settings.apiKey,
                             outputMarkdown = outputMarkdown,
-                            outputJson = outputJson
+                            outputJson = outputJson,
+                            pageRanges = dialog.pageRanges
                         )
                         val result = runBlocking {
                             withContext(Dispatchers.IO) {
@@ -167,7 +168,7 @@ class ConvertDocumentAction : AnAction() {
 
                 var content = "Converted: $successCount, Failed: $failCount, Skipped: $skippedCount"
                 if (failCount > 0 && firstError != null) {
-                    content += "\nerror: $firstError"
+                    content += "<br/>$firstError"
                 }
                 when {
                     failCount == 0 -> Notifications.info(project, "Document Converter", content)

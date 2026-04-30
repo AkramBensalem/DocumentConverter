@@ -68,6 +68,35 @@ object IoUtil {
     }
 
     /**
+     * Parses a page range string like "1-3, 5, 7-9" into a sorted list of 0-based page indices.
+     * Returns null if the string is blank (meaning all pages).
+     * Throws IllegalArgumentException if the format is invalid.
+     */
+    fun parsePageRanges(input: String): List<Int>? {
+        if (input.isBlank()) return null
+        val pages = mutableSetOf<Int>()
+        for (part in input.split(",")) {
+            val token = part.trim()
+            if (token.isEmpty()) continue
+            val dashIndex = token.indexOf('-')
+            if (dashIndex > 0) {
+                val from = token.substring(0, dashIndex).trim().toIntOrNull()
+                    ?: throw IllegalArgumentException("Invalid page range: '$token'")
+                val to = token.substring(dashIndex + 1).trim().toIntOrNull()
+                    ?: throw IllegalArgumentException("Invalid page range: '$token'")
+                if (from < 1 || to < from) throw IllegalArgumentException("Invalid page range: '$token'")
+                for (p in from..to) pages.add(p - 1)
+            } else {
+                val n = token.toIntOrNull()
+                    ?: throw IllegalArgumentException("Invalid page number: '$token'")
+                if (n < 1) throw IllegalArgumentException("Page number must be >= 1: '$token'")
+                pages.add(n - 1)
+            }
+        }
+        return if (pages.isEmpty()) null else pages.sorted()
+    }
+
+    /**
      * Updates markdown content to point to images in a subdirectory.
      */
     fun updateImagePaths(markdown: String, imageIds: List<String>, subDir: String): String {

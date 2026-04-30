@@ -67,9 +67,15 @@ class DocumentConverterConfigurable : Configurable {
                         runBlocking {
                             val result = DocumentConverterService.getInstance(project).testConnection(key)
                             if (!result.ok) {
-                                Messages.showErrorDialog(result.message, "Document Converter")
+                                if (result.message.contains("401")) {
+                                    Messages.showErrorDialog("Your Mistral API key is invalid or expired.", "Document Converter")
+                                } else if (result.message.contains("403")) {
+                                    Messages.showErrorDialog("Your Mistral API key is not authorized.", "Document Converter")
+                                } else if (result.message.contains("429")) {
+                                    Messages.showErrorDialog("Your Mistral API key is rate limited.", "Document Converter")
+                                } else Messages.showErrorDialog(result.message, "Document Converter")
                             } else {
-                                Messages.showInfoMessage(result.message, "Document Converter")
+                               Messages.showInfoMessage(result.message, "Document Converter")
                             }
                         }
                     }
