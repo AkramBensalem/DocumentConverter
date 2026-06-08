@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 import java.nio.file.Paths
+import org.apache.pdfbox.Loader
 import org.apache.pdfbox.pdmodel.PDDocument
 
 class PdfUtilTest {
@@ -22,7 +23,7 @@ class PdfUtilTest {
         
         assertTrue(target.toFile().exists(), "Extracted PDF should exist")
         
-        PDDocument.load(target.toFile()).use { document ->
+        Loader.loadPDF(target.toFile()).use { document ->
             assertTrue(document.numberOfPages == 1, "Extracted PDF should have 1 page")
         }
     }

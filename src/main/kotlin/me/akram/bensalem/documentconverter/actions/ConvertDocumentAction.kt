@@ -84,7 +84,7 @@ class ConvertDocumentAction : AnAction() {
                     indicator.text2 = "Uploading and processing — this may take a while for large documents…"
                     indicator.isIndeterminate = true
                     try {
-                        val outDir = IoUtil.computeOutputDir(document)
+                        val outDir = IoUtil.computeOutputDir(document, dialog.pageRanges)
                         val options = Options(
                             includeImages = settings.state.includeImages,
                             combinePages = settings.state.combinePages,
@@ -104,33 +104,9 @@ class ConvertDocumentAction : AnAction() {
                             successCount++
                             if (firstMd == null) firstMd = result.markdownFile ?: result.jsonFile
                             result.createdFiles.forEach { toRefresh.add(it.toFile()) }
-
-                            // Move the original file into the output directory
-                            try {
-                                val targetPdf = outDir.resolve(document.fileName)
-                                java.nio.file.Files.move(document, targetPdf, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
-                                toRefresh.add(targetPdf.toFile())
-                                toRefresh.add(document.parent.toFile()) // Refresh source directory
-                            } catch (ex: Exception) {
-                                log.warn("Failed to move $document to $outDir", ex)
-                            }
+                            toRefresh.add(outDir.toFile())
                         } else if (result.error == null) {
                             skippedCount++
-
-                            if (!document.parent.equals(outDir)) {
-                                try {
-                                    val targetPdf = outDir.resolve(document.fileName)
-                                    java.nio.file.Files.move(
-                                        document,
-                                        targetPdf,
-                                        java.nio.file.StandardCopyOption.REPLACE_EXISTING
-                                    )
-                                    toRefresh.add(targetPdf.toFile())
-                                    toRefresh.add(document.parent.toFile()) // Refresh source directory
-                                } catch (ex: Exception) {
-                                    log.warn("Failed to move skipped document $document to $outDir", ex)
-                                }
-                            }
                         } else {
                             failCount++
                             if (firstError == null) firstError = result.error

@@ -98,7 +98,7 @@ class DocumentConverterService {
             val settings = me.akram.bensalem.documentconverter.settings.DocumentConverterSettingsState.getInstance().state
             val cmd = settings.markitdownCmd.ifBlank { "markitdown" }
             val docPath = document.toAbsolutePath().toString()
-            val stem = document.fileName.toString().substringBeforeLast('.')
+            val stem = targetDir.fileName.toString()
             val created = mutableListOf<Path>()
 
             val process = ProcessBuilder(cmd, docPath)
@@ -180,9 +180,20 @@ class DocumentConverterService {
         val processingOptions = if (tempPdf != null) options.copy(pageRanges = "") else options
 
         return try {
+            val stem = targetDir.fileName.toString()
+            val created = mutableListOf<Path>()
+
+            if (tempPdf != null) {
+                val extractedPdfTarget = targetDir.resolve("$stem.pdf")
+                IoUtil.copyFile(tempPdf, extractedPdfTarget, options.overwritePolicy)?.let {
+                    created.add(it)
+                }
+            }
+
             // If Offline mode is selected, use local MarkItDown processing
             if (processingOptions.mode == OcrMode.Offline) {
-                return runOfflineConversion(docToProcess, targetDir, processingOptions)
+                val offlineResult = runOfflineConversion(docToProcess, targetDir, processingOptions)
+                return offlineResult.copy(createdFiles = created + offlineResult.createdFiles)
             }
 
             val ocrResponse: OcrResponse = runMistralOCR(docToProcess, processingOptions)
@@ -205,16 +216,6 @@ class DocumentConverterService {
             }
 
             val pageMarkdowns = finalResponse.pages.map { it.markdown }
-            val stem = document.fileName.toString().substringBeforeLast('.')
-
-            val created = mutableListOf<Path>()
-            
-            // Move/Copy the extracted PDF if it exists
-            if (tempPdf != null) {
-                val extractedPdfTarget = targetDir.resolve("$stem-extracted.pdf")
-                Files.copy(tempPdf, extractedPdfTarget)
-                created.add(extractedPdfTarget)
-            }
 
             // Write Markdown if enabled
             var mdFile: Path? = null

@@ -26,9 +26,15 @@ object IoUtil {
 
     fun computeOutputDir(
         pdf: Path,
+        pageRanges: String = ""
     ): Path {
         val stem = pdf.nameWithoutExtension
-        return pdf.parent.resolve(stem)
+        val folderName = if (pageRanges.isBlank()) {
+            stem
+        } else {
+            "${stem}-extracted_${pageRanges.replace(" ", "")}"
+        }
+        return pdf.parent.resolve(folderName)
     }
 
     fun ensureDir(dir: Path) {
@@ -51,6 +57,18 @@ object IoUtil {
 
     fun writeText(target: Path, text: String, overwrite: DocumentConverterSettingsState.OverwritePolicy): Path? =
         writeBytes(target, text.toByteArray(Charsets.UTF_8), overwrite)
+
+    fun copyFile(source: Path, target: Path, overwrite: DocumentConverterSettingsState.OverwritePolicy): Path? {
+        val final = when (overwrite) {
+            DocumentConverterSettingsState.OverwritePolicy.Overwrite -> target
+            DocumentConverterSettingsState.OverwritePolicy.SkipExisting -> if (target.exists()) null else target
+            DocumentConverterSettingsState.OverwritePolicy.WithSuffix -> nextAvailable(target)
+        } ?: return null
+
+        final.parent?.let { ensureDir(it) }
+        Files.copy(source, final, java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+        return final
+    }
 
     fun nextAvailable(target: Path): Path {
         if (!target.exists()) return target
