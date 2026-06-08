@@ -23,8 +23,10 @@ import me.akram.bensalem.documentconverter.data.response.SignedUrlResponse
 import me.akram.bensalem.documentconverter.data.response.UploadResponse
 import me.akram.bensalem.documentconverter.settings.DocumentConverterSettingsState.OcrMode
 import me.akram.bensalem.documentconverter.util.IoUtil
+import me.akram.bensalem.documentconverter.util.PdfUtil
 import java.net.ConnectException
 import java.net.UnknownHostException
+import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLException
@@ -62,6 +64,12 @@ class DocumentConverterService {
         if (response.status.value !in 200..299) {
             val errorBody = response.body<String>()
             log.warn("Upload failed with status ${response.status.value}: $errorBody")
+
+
+            if (response.status.value == 401) {
+                throw Exception("Your Mistral API key is invalid or expired.")
+            }
+
             throw Exception("Upload failed: ${response.status.value} - $errorBody")
         }
 
@@ -90,7 +98,7 @@ class DocumentConverterService {
             val settings = me.akram.bensalem.documentconverter.settings.DocumentConverterSettingsState.getInstance().state
             val cmd = settings.markitdownCmd.ifBlank { "markitdown" }
             val docPath = document.toAbsolutePath().toString()
-            val stem = document.fileName.toString().substringBeforeLast('.')
+            val stem = targetDir.fileName.toString()
             val created = mutableListOf<Path>()
 
             val process = ProcessBuilder(cmd, docPath)
@@ -153,13 +161,42 @@ class DocumentConverterService {
         targetDir: Path,
         options: Options
     ): OcrResult {
+        val pagesToExtract = IoUtil.parsePageRanges(options.pageRanges)
+        
+        val tempPdf = if (pagesToExtract != null) {
+            val tmp = Files.createTempFile("converted", ".pdf")
+            try {
+                PdfUtil.extractPages(document, tmp, pagesToExtract)
+                tmp
+            } catch (e: Exception) {
+                Files.deleteIfExists(tmp)
+                throw e
+            }
+        } else {
+            null
+        }
+
+        val docToProcess = tempPdf ?: document
+        val processingOptions = if (tempPdf != null) options.copy(pageRanges = "") else options
+
         return try {
-            // If Offline mode is selected, use local MarkItDown processing
-            if (options.mode == OcrMode.Offline) {
-                return runOfflineConversion(document, targetDir, options)
+            val stem = targetDir.fileName.toString()
+            val created = mutableListOf<Path>()
+
+            if (tempPdf != null) {
+                val extractedPdfTarget = targetDir.resolve("$stem.pdf")
+                IoUtil.copyFile(tempPdf, extractedPdfTarget, options.overwritePolicy)?.let {
+                    created.add(it)
+                }
             }
 
-            val ocrResponse: OcrResponse = runMistralOCR(document, options)
+            // If Offline mode is selected, use local MarkItDown processing
+            if (processingOptions.mode == OcrMode.Offline) {
+                val offlineResult = runOfflineConversion(docToProcess, targetDir, processingOptions)
+                return offlineResult.copy(createdFiles = created + offlineResult.createdFiles)
+            }
+
+            val ocrResponse: OcrResponse = runMistralOCR(docToProcess, processingOptions)
 
             val imagesToWrite: List<Pair<String, ByteArray>> =
                 ocrResponse.pages
@@ -169,7 +206,7 @@ class DocumentConverterService {
             val imageIds = imagesToWrite.map { it.first }
 
             // Update markdown to point to figures subdirectory
-            val finalResponse = if (options.includeImages && imageIds.isNotEmpty()) {
+            val finalResponse = if (processingOptions.includeImages && imageIds.isNotEmpty()) {
                 val updatedPages = ocrResponse.pages.map { page ->
                     page.copy(markdown = IoUtil.updateImagePaths(page.markdown, imageIds, "figures"))
                 }
@@ -179,37 +216,34 @@ class DocumentConverterService {
             }
 
             val pageMarkdowns = finalResponse.pages.map { it.markdown }
-            val stem = document.fileName.toString().substringBeforeLast('.')
-
-            val created = mutableListOf<Path>()
 
             // Write Markdown if enabled
             var mdFile: Path? = null
-            if (options.outputMarkdown) {
+            if (processingOptions.outputMarkdown) {
                 val mdTarget = targetDir.resolve("$stem.md")
                 mdFile = IoUtil.writeText(
                     mdTarget,
-                    joinMarkdown(pageMarkdowns, options.combinePages),
-                    options.overwritePolicy
+                    joinMarkdown(pageMarkdowns, processingOptions.combinePages),
+                    processingOptions.overwritePolicy
                 )
                 if (mdFile != null) created.add(mdFile)
             }
 
             // Write JSON if enabled
             var jsonFile: Path? = null
-            if (options.outputJson) {
+            if (processingOptions.outputJson) {
                 val jsonTarget = targetDir.resolve("$stem.json")
                 val jsonContent = json.encodeToString(OcrResponse.serializer(), finalResponse)
-                jsonFile = IoUtil.writeText(jsonTarget, jsonContent, options.overwritePolicy)
+                jsonFile = IoUtil.writeText(jsonTarget, jsonContent, processingOptions.overwritePolicy)
                 if (jsonFile != null) created.add(jsonFile)
             }
 
             val imageFiles = mutableListOf<Path>()
-            if (options.includeImages && imagesToWrite.isNotEmpty()) {
+            if (processingOptions.includeImages && imagesToWrite.isNotEmpty()) {
                 val figuresDir = targetDir.resolve("figures")
                 for ((id, bytes) in imagesToWrite) {
                     val imgTarget = figuresDir.resolve(id)
-                    IoUtil.writeBytes(imgTarget, bytes, options.overwritePolicy)?.let {
+                    IoUtil.writeBytes(imgTarget, bytes, processingOptions.overwritePolicy)?.let {
                         imageFiles.add(it)
                         created.add(it)
                     }
@@ -226,6 +260,10 @@ class DocumentConverterService {
                 createdFiles = emptyList(),
                 error = friendlyMessage(e)
             )
+        } finally {
+            if (tempPdf != null) {
+                Files.deleteIfExists(tempPdf)
+            }
         }
     }
 
@@ -250,10 +288,12 @@ class DocumentConverterService {
         return try {
             val upload: UploadResponse = uploadFile(document, options.apiKey)
             val signedUrl: SignedUrlResponse = signUrl(upload.id, options.apiKey)
+            val pages = IoUtil.parsePageRanges(options.pageRanges)
             val request = OcrRequest(
                 model = "mistral-ocr-latest",
                 document = OcrRequest.Document(type = "document_url", documentUrl = signedUrl.url),
-                includeImageBase64 = true
+                includeImageBase64 = true,
+                pages = pages
             )
             ocr(request, options.apiKey)
         } catch (e: Exception) {

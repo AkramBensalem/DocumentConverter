@@ -4,11 +4,13 @@
   <img src="illustrations/logo.png" alt="Logo" width="200">
 </p>
 
-Document Converter is an IntelliJ IDEA plugin that allows you to transform your documents (such as PDF files) into Markdown or JSON formats effortlessly. It supports both cloud-based OCR via Mistral AI and offline conversion using MarkItDown.
+Document Converter is an IntelliJ IDEA plugin that allows you to transform documents (such as PDF files) into Markdown or JSON formats. It supports very large project conversions, selective PDF page extraction, cloud-based OCR via Mistral AI, and offline conversion using MarkItDown.
 
 ## Features
 
-- **Multi-format Support**: Convert PDF files and folders recursively.
+- **Large Project Support**: Convert files and folders at project scale, including very heavy documents selections.
+- **Selective PDF Extraction**: Convert only the pages you need from PDF documents.
+- **Multi-format Support**: Export to Markdown and JSON.
 - **OCR Integration**: High-quality content extraction using Mistral AI OCR.
 - **Offline Mode**: Convert documents locally using MarkItDown (no API key required).
 - **Flexible Output**: Choose between Markdown (with images) and JSON formats.
@@ -43,9 +45,9 @@ Document Converter is an IntelliJ IDEA plugin that allows you to transform your 
 
 ![Main Screenshot](illustrations/main.png)
 
-1. In the **Project** tool window, right-click one or more PDF files or a directory.
+1. In the **Project** tool window, right-click one or more PDF files or a directory (including large pdf selections).
 2. Select **Convert Document**.
-3. Configure output options in the dialog.
+3. Configure output options in the dialog, including selecting specific PDF pages when needed.
 4. Monitor progress in the background.
 5. Upon completion, the generated files will be placed in a subfolder named after the original document.
 

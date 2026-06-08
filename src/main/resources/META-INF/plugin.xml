@@ -7,7 +7,7 @@
       <img src="https://raw.githubusercontent.com/AkramBensalem/DocumentConverter/master/illustrations/logo.png" alt="Logo" width="128">
     </p>
 
-    <p>A simple IntelliJ IDEA plugin for converting files into formats like Markdown and JSON.</p>
+    <p>An IntelliJ IDEA plugin for converting files and large project selections into formats like Markdown and JSON.</p>
 
     <p align="center">
       <img src="https://raw.githubusercontent.com/AkramBensalem/DocumentConverter/master/illustrations/main.png" alt="Main Screenshot" width="420">
@@ -18,6 +18,8 @@
     <p><strong>Features:</strong></p>
     <ul>
       <li>Convert files and folders</li>
+      <li>Scale to very large projects</li>
+      <li>Extract selected pages from PDF files</li>
       <li>Export to Markdown, JSON, and other output formats</li>
       <li>Support for OCR when needed</li>
       <li>Offline conversion support</li>

@@ -7,7 +7,8 @@ import kotlinx.serialization.Serializable
 data class OcrRequest(
     val model: String,
     val document: Document,
-    @SerialName("include_image_base64") val includeImageBase64: Boolean
+    @SerialName("include_image_base64") val includeImageBase64: Boolean,
+    val pages: List<Int>? = null
 ) {
     @Serializable
     data class Document(
